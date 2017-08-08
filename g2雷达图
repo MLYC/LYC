@@ -1,0 +1,65 @@
+你说的这种其实不是雷达图，而是一种平行坐标系的变形，所有的坐标轴的度量都不一样，目前不支持，但是可以使用模拟的方式来实现。
+
+var data = [
+  {genre: 'Sports', sold: 275, type: '1'},
+  {genre: 'Strategy', sold: 115, type: '1'},
+  {genre: 'Action', sold: 120, type: '1'},
+  {genre: 'Shooter', sold: 350, type: '1'},
+  {genre: 'Other', sold: 150, type: '1'},
+  
+  {genre: 'Sports', sold: 205, type: '2'},
+  {genre: 'Strategy', sold: 105, type: '2'},
+  {genre: 'Action', sold: 100, type: '2'},
+  {genre: 'Shooter', sold: 380, type: '2'},
+  {genre: 'Other', sold: 120, type: '2'},
+];
+
+// 需要先算出各个分类的范围，这里模拟直接设置
+var rangeMap = {
+  'Sports': [0, 300],
+  'Strategy': [0, 120],
+  'Action': [0, 150],
+  'Shooter': [0, 400],
+  'Other': [0, 200]
+};
+
+data.forEach(function(obj) {
+  var range = rangeMap[obj.genre];
+  obj.normalValue = obj.sold / (range[1] - range[0]);// 归一化
+});
+// Step 1: 创建 Chart 对象
+var chart = new G2.Chart({
+  id: 'mountNode',  // 指定图表容器 ID
+  height : 300,     // 指定图表高度
+  forceFit: true,
+});
+
+// Step 2: 载入数据源
+chart.source(data, {
+  genre: {
+    alias: '游戏种类' // 列定义，定义该属性显示的别名
+  },
+  sold: {
+    alias: '销售量'
+  },
+  normalValue: {
+    min: 0,
+    max: 1
+  }
+});
+
+chart.coord('polar');
+chart.axis('genre', {
+  line: null
+})
+chart.axis('normalValue', {
+  labels: null,
+  grid: {
+    type: 'polygon'
+  }
+})
+// Step 3：创建图形语法，绘制柱状图，由 genre 和 sold 两个属性决定图形位置，genre 映射至 x 轴，sold 映射至 y 轴
+chart.line().position('genre*normalValue').color('type').tooltip('sold')
+
+// Step 4: 渲染图表
+chart.render();
